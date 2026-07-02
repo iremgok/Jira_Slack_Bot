@@ -1,0 +1,16 @@
+requests
+python-dotenv
+
+fastapi
+uvicorn
+
+SQLAlchemy
+psycopg2-binary
+
+slack_sdk
+
+apscheduler
+
+pytest
+
+pydantic
