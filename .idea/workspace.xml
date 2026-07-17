@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="Configure SQLAlchemy database infrastructure">
-      <change afterPath="$PROJECT_DIR$/app/enums/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/enums/issue_status.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/enums/priority.py" afterDir="false" />
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add issues ORM model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/issue.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/issue.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/issue_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/issue_repository.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +117,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783597422539</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="add issues ORM model">
+      <option name="closed" value="true" />
+      <created>1784278605099</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1784278605099</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -128,6 +133,7 @@
     <MESSAGE value="Add application configuration" />
     <MESSAGE value="Add logging configuration" />
     <MESSAGE value="Configure SQLAlchemy database infrastructure" />
-    <option name="LAST_COMMIT_MESSAGE" value="Configure SQLAlchemy database infrastructure" />
+    <MESSAGE value="add issues ORM model" />
+    <option name="LAST_COMMIT_MESSAGE" value="add issues ORM model" />
   </component>
 </project>
