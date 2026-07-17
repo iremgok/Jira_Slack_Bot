@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     jira_url: str = ""
     jira_email: str = ""
     jira_token: str = ""
+    project_key: str = ""
 
     # -------SLACK Configuration---------
     slack_token: str = ""

@@ -6,8 +6,7 @@ class IssuePriority(str, Enum):
     Supported jira issue priorities.
     """
 
-    LOW = "Low",
-    MEDIUM = "Medium",
-    HIGH = "High",
-    CRITICAL = "Critical"
-
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+    HIGHEST = "Highest"

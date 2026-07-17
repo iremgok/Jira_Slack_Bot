@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add issues ORM model">
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="Implement Issue repository">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/repositories/issue_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/issue_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/jira_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/jira_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/enums/issue_status.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/enums/issue_status.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/enums/priority.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/enums/priority.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +129,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784278605099</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Implement Issue repository">
+      <option name="closed" value="true" />
+      <created>1784282983568</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1784282983568</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -134,6 +146,7 @@
     <MESSAGE value="Add logging configuration" />
     <MESSAGE value="Configure SQLAlchemy database infrastructure" />
     <MESSAGE value="add issues ORM model" />
-    <option name="LAST_COMMIT_MESSAGE" value="add issues ORM model" />
+    <MESSAGE value="Implement Issue repository" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implement Issue repository" />
   </component>
 </project>

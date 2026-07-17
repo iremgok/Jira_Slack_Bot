@@ -1,17 +1,26 @@
-requests
-python-dotenv
+# HTTP Client
+httpx
+tenacity
 
+# Configuration
+python-dotenv
+pydantic
+pydantic-settings
+
+# Backend API
 fastapi
 uvicorn
 
+# Database
 SQLAlchemy
 psycopg2-binary
 
+# Slack
 slack_sdk
 
+# Scheduler
 apscheduler
 
+# Testing
 pytest
-
-pydantic
-pydantic-settings
+pytest-mock
