@@ -39,16 +39,55 @@ class JiraClient:
         Search Jira issues using jql
         """
 
-        logger.info(f"")
+        logger.info(f"Requesting issues from jira...")
+        response = self.client.get(
+            "/rest/api/3/search",
+            params={
+                "jql": jql,
+            },
+        )
+
+        response.raise_for_status()
+        logger.info("Issues received successfully")
+
+        return response.json()
 
 
+    def get_issue(self, issue_key: str) -> dict[str, Any]:
+        """"
+        Retreive a single jira issue
+        """
+
+        logger.info(f"Fetching issue: {issue_key}")
+        response = self.client.get(
+            f"/rest/api/3/issue/{issue_key}",
+        )
+
+        response.raise_for_status()
+        return response.json()
 
 
+    def health_check(self) -> bool:
+        """
+        Check Jira API connectivity
+        """
+
+        try:
+            response= self.client.get("/rest/api/3/myself")
+            response.raise_for_status()
+            logger.info("Successfully connected to JIRA")
+
+            return True
+
+        except httpx.HTTPError as exc:
+            logger.info(f"Jira connection failed: {exc}")
+
+            return False
 
 
-
-
-
-
-
+    def close(self) -> None:
+        """
+        Close the HTTP Client
+        """
+        self.client.close()
 
