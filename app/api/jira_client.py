@@ -34,7 +34,7 @@ class JiraClient:
         wait = wait_fixed(2)
     )
 
-    def search_issue(self, jql: str) -> dict[str, Any]:
+    def search_issue(self, jql: str, max_results: int = 50) -> dict[str, Any]:
         """
         Search Jira issues using jql
         """
@@ -44,6 +44,7 @@ class JiraClient:
             "/rest/api/3/search",
             params={
                 "jql": jql,
+                "maxResults": max_results,
             },
         )
 
