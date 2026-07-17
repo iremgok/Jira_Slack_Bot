@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add project dependencies">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/jira_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/jira_client.py" afterDir="false" />
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="added jira_client">
+      <change beforePath="$PROJECT_DIR$/app/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -141,7 +140,23 @@
       <option name="project" value="LOCAL" />
       <updated>1784289198895</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="added jira_client">
+      <option name="closed" value="true" />
+      <created>1784307717428</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1784307717428</updated>
+    </task>
+    <task id="LOCAL-00010" summary="added jira_client">
+      <option name="closed" value="true" />
+      <created>1784307878282</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1784307878282</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -152,6 +167,7 @@
     <MESSAGE value="add issues ORM model" />
     <MESSAGE value="Implement Issue repository" />
     <MESSAGE value="add project dependencies" />
-    <option name="LAST_COMMIT_MESSAGE" value="add project dependencies" />
+    <MESSAGE value="added jira_client" />
+    <option name="LAST_COMMIT_MESSAGE" value="added jira_client" />
   </component>
 </project>

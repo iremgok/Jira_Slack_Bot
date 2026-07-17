@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # -------SLACK Configuration---------
     slack_token: str = ""
     slack_channel: str = ""
+    slack_webhook_url: str = ""
 
     # -------DATABASE Configuration---------
     database_url: str = "sqlite:///jira_bot.db"
