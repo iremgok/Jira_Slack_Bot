@@ -8,6 +8,7 @@ from app.enums.issue_status import IssueStatus
 from app.enums.priority import IssuePriority
 from app.models.issue import Issue
 from app.utils.logger import logger
+from app.services.notification_service import NotificationService
 
 
 class IssueService:
@@ -19,11 +20,11 @@ class IssueService:
             self,
             jira_client: JiraClient,
             repository: IssueRepository,
-            slack_client: SlackClient,
+            notification_service: NotificationService,
     ) -> None:
         self.jira_client = jira_client
         self.repository = repository
-        self.slack_client = slack_client
+        self.notification_service = notification_service
 
         def sync_issue(self) -> None:
             """
@@ -57,7 +58,7 @@ class IssueService:
 
             issue = self.map_issue(jira_issue)
             self.repository.create(issue)
-            self.notify_new_issue(issue)
+            self.notification_service.send_new_issue(issue)
 
         @staticmethod
         def map_issue(jira_issue: dict) -> Issue:
@@ -116,22 +117,3 @@ class IssueService:
             )
 
             self.slack_client.send_message(message)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
