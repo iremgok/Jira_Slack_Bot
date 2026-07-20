@@ -42,7 +42,7 @@ class SchedulerServices:
         logger.info("Registering scheduled jobs")
 
         self.scheduler.add_job(
-            func = self.issue_service.sync_issues,
+            func = self.issue_services.sync_issues,
             trigger = "interval",
             seconds = settings.check_interval,
             id = "jira_sync",
@@ -50,7 +50,7 @@ class SchedulerServices:
         )
 
         self.scheduler.add_job(
-            func = self.report_service.send_daily_report,
+            func = self.report_services.send_daily_report,
             trigger = "cron",
             hour = 18,
             minute = 0,
