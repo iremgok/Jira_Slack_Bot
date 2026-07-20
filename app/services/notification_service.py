@@ -65,3 +65,13 @@ class NotificationService:
         logger.error(error_message)
 
         return self.slack_client.send_message(message)
+
+
+    def send_message(self, message: str) -> bool:
+        """
+        Send a generic Slack message.
+        """
+
+        logger.info("Sending Slack message.")
+
+        return self.slack_client.send_message(message)
