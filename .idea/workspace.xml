@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="started slack_client">
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="Added slack_client">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/slack_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/slack_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/issue_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/issue_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -165,7 +165,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784308325948</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Added slack_client">
+      <option name="closed" value="true" />
+      <created>1784309329953</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1784309329953</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -178,6 +186,7 @@
     <MESSAGE value="add project dependencies" />
     <MESSAGE value="added jira_client" />
     <MESSAGE value="started slack_client" />
-    <option name="LAST_COMMIT_MESSAGE" value="started slack_client" />
+    <MESSAGE value="Added slack_client" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added slack_client" />
   </component>
 </project>
