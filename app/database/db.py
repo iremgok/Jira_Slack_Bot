@@ -10,11 +10,10 @@ engine = create_engine(
     pool_pre_ping = True,
 )
 
-#Session factory
-sessionLocal = sessionmaker(
-    autoflush = False,
-    autocommmit = False,
-    Bing = engine,
+# Session factory
+SessionLocal = sessionmaker(
+    autoflush=False,
+    bind=engine,
 )
 
 def get_db():
@@ -27,7 +26,7 @@ def get_db():
     Ensures the session is always closed after us.
     """
 
-    db = sessionLocal()
+    db = SessionLocal()
 
     try:
         logger.info("Database session is created.")

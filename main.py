@@ -1,76 +1,62 @@
-from app.api.jira_client import JiraClient
-from app.api.slack_client import SlackClient
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+
 from app.database.base import Base
-from app.database.db import sessionLocal, engine
-from app.repositories.issue_repository import IssueRepository
-from app.services.issue_service import IssueService
-from app.services.notification_service import NotificationService
-from app.services.report_service import ReportService
+from app.database.db import engine
 from app.scheduler.scheduler import SchedulerServices
 from app.utils.logger import logger
-from fastapi import FastAPI
 from app.api.routes import router
 
+# Initialize scheduler
+scheduler = SchedulerServices()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Handles application startup and shutdown events.
+    """
+    logger.info("Initializing database tables...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database tables: {e}")
+
+    logger.info("Starting background scheduler...")
+    try:
+        scheduler.start()
+        logger.info("Background scheduler started successfully.")
+    except Exception as e:
+        logger.error(f"Failed to start scheduler: {e}")
+
+    yield
+
+    logger.info("Shutting down background scheduler...")
+    try:
+        scheduler.shutdown()
+        logger.info("Background scheduler stopped successfully.")
+    except Exception as e:
+        logger.error(f"Failed to stop scheduler: {e}")
+
+
+app = FastAPI(
+    title="Jira Slack Bot",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Include API routes
+app.include_router(router)
 
 
 def main() -> None:
     """
-    Application entry point.
+    Application entry point for running locally.
     """
-
-    app = FastAPI(
-        title="Jira Slack Bot",
-        version="1.0.0",
-    )
-
-    app.include_router(router)
-
-    logger.info("Starting Jira Slack Bot...")
-
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
-
-    # Database session
-    session = sessionLocal()
-
-    # Clients
-    jira_client = JiraClient()
-    slack_client = SlackClient()
-
-    # Repository
-    repository = IssueRepository(session)
-
-    # Services
-    notification_service = NotificationService(slack_client)
-
-    issue_service = IssueService(
-        jira_client=jira_client,
-        repository=repository,
-        notification_service=notification_service,
-    )
-
-    report_service = ReportService(
-        repository=repository,
-        notification_service=notification_service,
-    )
-
-    # Scheduler
-    scheduler = SchedulerServices(
-        issue_services = issue_service,
-        report_services = report_service,
-    )
-
-    try:
-        logger.info("Application started successfully.")
-
-        scheduler.start()
-
-    except KeyboardInterrupt:
-        logger.info("Application stopped by user.")
-
-    finally:
-        jira_client.close()
-        session.close()
+    import uvicorn
+    logger.info("Starting FastAPI server...")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
 
 
 if __name__ == "__main__":

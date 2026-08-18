@@ -4,19 +4,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add application entry point">
-      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/routes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/exceptions/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/exceptions/custom_exceptions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/exceptions/exception_handler.py" afterDir="false" />
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="fixed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/jira_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/jira_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/routes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/slack_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/slack_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/notification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/report.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/report.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/repositories/issue_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/issue_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/notification_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/notification_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/report_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/report_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/scheduler/scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/scheduler/scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/issue_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/issue_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/notification_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/notification_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/report_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/report_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/formatter.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/formatter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/helpers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exceptions/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exceptions/custom_exceptions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exceptions/exception_handler.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_issue_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_issue_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,7 +235,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784547597998</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="fixed">
+      <option name="closed" value="true" />
+      <created>1787028867524</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1787028867524</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -242,6 +262,7 @@
     <MESSAGE value="add report generation service" />
     <MESSAGE value="implement scheduler service" />
     <MESSAGE value="add application entry point" />
-    <option name="LAST_COMMIT_MESSAGE" value="add application entry point" />
+    <MESSAGE value="fixed" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed" />
   </component>
 </project>

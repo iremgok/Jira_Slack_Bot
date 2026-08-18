@@ -1,10 +1,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
+from typing import Any
 
 class Settings(BaseSettings):
     """
     Central application configuration
 
-    Loads environment variables from the .env file.
+    Loads environment variables from the .env file
     and provides a single source of truth for all
     application settings.
     """
@@ -32,6 +34,13 @@ class Settings(BaseSettings):
 
     # -------LOGGING Configuration---------
     log_level: str = "INFO"
+
+    @model_validator(mode="before")
+    @classmethod
+    def strip_strings(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            return {k: v.strip() if isinstance(v, str) else v for k, v in values.items()}
+        return values
 
     model_config = SettingsConfigDict(
         env_file = ".env",

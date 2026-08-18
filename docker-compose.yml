@@ -1,39 +1,42 @@
 version: "3.9"
 
 services:
-
   postgres:
     image: postgres:17
-
     container_name: jira_postgres
-
     restart: always
-
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: 1803
       POSTGRES_DB: jira_slack_bot
-
     ports:
       - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jira_slack_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   jira_bot:
-
     build: .
-
     container_name: jira_slack_bot
-
     restart: always
-
     depends_on:
-      - postgres
-
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:1803@postgres:5432/jira_slack_bot
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
-
   postgres_data:
