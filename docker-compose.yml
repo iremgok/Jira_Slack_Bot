@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:17
+
+    container_name: jira_postgres
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: jira_slack_bot
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  jira_bot:
+
+    build: .
+
+    container_name: jira_slack_bot
+
+    restart: always
+
+    depends_on:
+      - postgres
+
+    env_file:
+      - .env
+
+volumes:
+
+  postgres_data:

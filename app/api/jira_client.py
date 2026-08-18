@@ -40,13 +40,22 @@ class JiraClient:
         """
 
         logger.info(f"Requesting issues from jira...")
-        response = self.client.get(
-            "/rest/api/3/search",
-            params={
-                "jql": jql,
-                "maxResults": max_results,
-            },
-        )
+
+        try:
+
+            response = self.client.get(
+                "/rest/api/3/search",
+                params={
+                    "jql": jql,
+                    "maxResults": max_results,
+                },
+            )
+
+        except httpx.HTTPError as error:
+
+            raise JiraConnectionError(
+                "Failed to connect to Jira."
+            ) from error
 
         response.raise_for_status()
         logger.info("Issues received successfully")
@@ -60,9 +69,16 @@ class JiraClient:
         """
 
         logger.info(f"Fetching issue: {issue_key}")
-        response = self.client.get(
-            f"/rest/api/3/issue/{issue_key}",
-        )
+
+        try:
+
+            response = self.client.get(f"/rest/api/3/issue/{issue_key}",)
+
+        except httpx.HTTPError as error:
+
+            raise JiraConnectionError(
+                "Failed to connect to Jira."
+            ) from error
 
         response.raise_for_status()
         return response.json()

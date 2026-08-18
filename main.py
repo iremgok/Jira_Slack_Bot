@@ -8,12 +8,22 @@ from app.services.notification_service import NotificationService
 from app.services.report_service import ReportService
 from app.scheduler.scheduler import SchedulerServices
 from app.utils.logger import logger
+from fastapi import FastAPI
+from app.api.routes import router
+
 
 
 def main() -> None:
     """
     Application entry point.
     """
+
+    app = FastAPI(
+        title="Jira Slack Bot",
+        version="1.0.0",
+    )
+
+    app.include_router(router)
 
     logger.info("Starting Jira Slack Bot...")
 

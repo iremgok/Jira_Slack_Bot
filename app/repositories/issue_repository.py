@@ -1,8 +1,13 @@
-from sqlalchemy import select
+from datetime import UTC, datetime
+
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
+from app.enums.issue_status import IssueStatus
+from app.exceptions.custom_exceptions import RepositoryError
 from app.models.issue import Issue
 from app.utils.logger import logger
+
 
 
 class IssueRepository:
@@ -13,17 +18,30 @@ class IssueRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def add(self, issue:Issue):
+
+    def create(self, issue:Issue) -> Issue:
         """
-        Add a new issue to the database
+        Create a new issue to the database
         """
 
         self.db.add(issue)
-        self.db.commit()
+        try:
+
+            self.db.commit()
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            raise RepositoryError(
+                "Database transaction failed."
+            ) from error
         self.db.refresh(issue)
 
-        logger.info(f"issue '{issue.issue_key}' added.")
+        logger.info(f"issue '{issue.issue_key}' created.")
+
         return issue
+
 
     def get_by_key(self, issue_key: str) -> Issue | None:
         """
@@ -34,6 +52,7 @@ class IssueRepository:
 
         return self.db.scalar(statement)
 
+
     def exists(self, issue_key: str) -> bool:
         """"
         Check whether an issue already exits.
@@ -41,16 +60,30 @@ class IssueRepository:
 
         return self.get_by_key(issue_key) is not None
 
+
     def update(self, issue: Issue) -> Issue:
         """
         Update an existing issue
         """
 
-        self.db.commit()
+        try:
+
+            self.db.commit()
+            self.db.refresh(issue)
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            raise RepositoryError(
+                "Database transaction failed."
+            ) from error
         self.db.refresh(issue)
 
         logger.info(f"issue '{issue.issue_key}' updated.")
+
         return issue
+
 
     def mark_as_processed(self, issue_key: str) -> bool:
         """
@@ -64,10 +97,22 @@ class IssueRepository:
 
         issue.processed = True
 
-        self.db.commit()
-        logger.info(f"issue '{issue.issue_key}' mark as processed.")
+        try:
+
+            self.db.commit()
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            raise RepositoryError(
+                "Database transaction failed."
+            ) from error
+
+        logger.info(f"issue '{issue.issue_key}' marked as processed.")
 
         return True
+
 
     def get_unprocessed(self) -> list[Issue]:
         """
@@ -79,3 +124,103 @@ class IssueRepository:
         return list(self.db.scalars(statement).all())
 
 
+    def get_all(self) -> list[Issue]:
+        """
+        Retrieve all issues ordered by last update.
+        """
+
+        statement = (
+            select(Issue)
+            .order_by(desc(Issue.updated_at))
+        )
+
+        return list(self.db.scalars(statement).all())
+
+
+    def count_created_today(self) -> int:
+        """
+        Count issues created today.
+        """
+
+        today = datetime.now(UTC).date()
+
+        statement = (
+            select(func.count())
+            .select_from(Issue)
+            .where(func.date(Issue.created_at) == today)
+        )
+
+        return self.db.scalar(statement) or 0
+
+
+    def count_completed_today(self) -> int:
+        """
+        Count completed issues today.
+        """
+
+        today = datetime.now(UTC).date()
+
+        statement = (
+            select(func.count())
+            .select_from(Issue)
+            .where(
+                Issue.status == IssueStatus.DONE,
+                func.date(Issue.updated_at) == today,
+            )
+        )
+
+        return self.db.scalar(statement) or 0
+
+
+    def count_blocked(self) -> int:
+        """
+        Count blocked issues.
+        """
+
+        statement = (
+            select(func.count())
+            .select_from(Issue)
+            .where(Issue.status == IssueStatus.BLOCKED)
+        )
+
+        return self.db.scalar(statement) or 0
+
+
+    def get_top_assignee(self) -> str:
+        """
+        Return the assignee with the highest number of issues.
+        """
+
+        statement = (
+            select(
+                Issue.assignee,
+                func.count(Issue.id).label("total")
+            )
+            .where(Issue.assignee.is_not(None))
+            .group_by(Issue.assignee)
+            .order_by(desc("total"))
+        )
+
+        result = self.db.execute(statement).first()
+
+        if result is None:
+            return "No assignee"
+
+        return f"{result.assignee} ({result.total})"
+
+
+    def _commit(self) -> None:
+        """
+        Commit current transaction.
+        """
+
+        try:
+            self.db.commit()
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            raise RepositoryError(
+                "Database transaction failed."
+            ) from error

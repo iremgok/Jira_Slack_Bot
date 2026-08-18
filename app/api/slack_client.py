@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-
+from app.exceptions.custom_exceptions import SlackConnectionError
 from app.config.settings import settings
 from app.utils.logger import logger
+
 
 
 class SlackClient:
@@ -34,12 +35,17 @@ class SlackClient:
 
             return True
 
+
         except SlackApiError as exc:
+
             logger.error(
-                f"Failed to send Slack Message: {exc.response['error']}"
+                f"Failed to connect to Slack API: {exc.response['error']}"
             )
 
-            return False
+            raise SlackConnectionError(
+                exc.response["error"]
+            ) from exc
+
 
     def health_check(self) -> bool:
         """
@@ -52,9 +58,14 @@ class SlackClient:
 
             return True
 
+
         except SlackApiError as exc:
+
             logger.error(
-                f"Failed to connect to Slack API: {exc.response['error']}"
+                f"Failed to send Slack message: {exc.response['error']}"
             )
 
-            return False
+            raise SlackConnectionError(
+                exc.response["error"]
+            ) from exc
+

@@ -4,9 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add report generation service">
+    <list default="true" id="2329c24d-6ffd-4d5c-b86a-e1e987d0cb83" name="Changes" comment="add application entry point">
+      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/routes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exceptions/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exceptions/custom_exceptions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/exceptions/exception_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/scheduler/scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/scheduler/scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/jira_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/jira_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/slack_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/slack_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/repositories/issue_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/repositories/issue_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +207,23 @@
       <option name="project" value="LOCAL" />
       <updated>1784546402764</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="implement scheduler service">
+      <option name="closed" value="true" />
+      <created>1784547348556</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1784547348556</updated>
+    </task>
+    <task id="LOCAL-00017" summary="add application entry point">
+      <option name="closed" value="true" />
+      <created>1784547597998</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1784547597998</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -214,6 +240,8 @@
     <MESSAGE value="Added issue_service" />
     <MESSAGE value="implement notification service" />
     <MESSAGE value="add report generation service" />
-    <option name="LAST_COMMIT_MESSAGE" value="add report generation service" />
+    <MESSAGE value="implement scheduler service" />
+    <MESSAGE value="add application entry point" />
+    <option name="LAST_COMMIT_MESSAGE" value="add application entry point" />
   </component>
 </project>
