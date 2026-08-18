@@ -38,22 +38,54 @@ class JiraClient:
         """
         Search Jira issues using JQL (returns a single page response).
         """
-        logger.info(f"Requesting single page of issues from Jira with JQL: {jql}")
+        logger.info(f"[MOCK TEST] Jira istekleri geçici olarak sahte veriyle simüle ediliyor. JQL: {jql}")
 
-        try:
-            response = self.client.get(
-                "/rest/api/3/search",
-                params={
-                    "jql": jql,
-                    "maxResults": max_results,
+        # TEST İÇİN SAHTE (MOCK) VERİ
+        return {
+            "startAt": 0,
+            "maxResults": max_results,
+            "total": 2,
+            "issues": [
+                {
+                    "key": "TASK-101",
+                    "fields": {
+                        "summary": "Ödeme sayfasında 500 hatası alınıyor",
+                        "status": {"name": "In Progress"},
+                        "priority": {"name": "High"},
+                        "assignee": {"displayName": "Ahmet Yılmaz"},
+                        "created": "2026-08-18T10:00:00.000+0300",
+                        "updated": "2026-08-18T11:30:00.000+0300",
+                    },
                 },
-            )
-            response.raise_for_status()
-        except httpx.HTTPError as error:
-            raise JiraConnectionError("Failed to connect to Jira.") from error
+                {
+                    "key": "TASK-102",
+                    "fields": {
+                        "summary": "Slack entegrasyonu tamamlandı",
+                        "status": {"name": "Done"},
+                        "priority": {"name": "Medium"},
+                        "assignee": {"displayName": "İrem"},
+                        "created": "2026-08-18T09:00:00.000+0300",
+                        "updated": "2026-08-18T12:00:00.000+0300",
+                    },
+                },
+            ],
+        }
 
-        logger.info("Issues page received successfully.")
-        return response.json()
+        # GERÇEK JIRA KODU (İleride Jira hesabı açıldığında üstteki return bloğunu silmen yeterli)
+        # try:
+        #     response = self.client.get(
+        #         "/rest/api/3/search",
+        #         params={
+        #             "jql": jql,
+        #             "maxResults": max_results,
+        #         },
+        #     )
+        #     response.raise_for_status()
+        # except httpx.HTTPError as error:
+        #     raise JiraConnectionError("Failed to connect to Jira.") from error
+        #
+        # logger.info("Issues page received successfully.")
+        # return response.json()
 
     def search_issues(self, jql: str, limit: int | None = None) -> list[dict[str, Any]]:
         """
