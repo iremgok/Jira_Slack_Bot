@@ -9,6 +9,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+COPY alembic.ini .
+COPY alembic ./alembic
 COPY src ./src
 
 # Run as an unprivileged user

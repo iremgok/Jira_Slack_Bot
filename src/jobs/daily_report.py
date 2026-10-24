@@ -82,7 +82,10 @@ class DailyReportJob:
         minutes = math.ceil((now_local - day_start).total_seconds() / 60) + WINDOW_BUFFER_MINUTES
         return build_jql(
             self.project_key,
-            f"created >= -{minutes}m OR resolved >= -{minutes}m OR statusCategory != Done",
+            # "updated" catches issues moved to Done without a resolution being set
+            f"created >= -{minutes}m OR resolved >= -{minutes}m"
+            f" OR (statusCategory = Done AND updated >= -{minutes}m)"
+            " OR statusCategory != Done",
             extra=self.extra_jql,
             order_by="priority DESC, created ASC",
         )

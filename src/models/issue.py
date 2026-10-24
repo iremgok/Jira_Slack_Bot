@@ -16,7 +16,7 @@ UNASSIGNED = "Unassigned"
 DONE_CATEGORY = "done"
 
 # Fields requested from Jira; keeps responses small
-JIRA_FIELDS = "summary,status,assignee,priority,issuetype,created,updated,resolutiondate"
+JIRA_FIELDS = "summary,status,assignee,priority,issuetype,created,updated,resolutiondate,statuscategorychangedate"
 
 
 def parse_jira_datetime(value: Any) -> datetime | None:
@@ -53,9 +53,10 @@ class JiraIssue(BaseModel):
     created: datetime
     updated: datetime
     resolved: datetime | None = None
+    status_category_changed: datetime | None = None
     url: str = ""
 
-    @field_validator("created", "updated", "resolved", mode="before")
+    @field_validator("created", "updated", "resolved", "status_category_changed", mode="before")
     @classmethod
     def _normalize_dates(cls, value: Any) -> datetime | None:
         return parse_jira_datetime(value)
@@ -81,6 +82,7 @@ class JiraIssue(BaseModel):
             created=fields.get("created"),
             updated=fields.get("updated"),
             resolved=fields.get("resolutiondate"),
+            status_category_changed=fields.get("statuscategorychangedate"),
             url=f"{base_url.rstrip('/')}/browse/{key}",
         )
 
@@ -93,6 +95,14 @@ class JiraIssue(BaseModel):
         if self.status_category:
             return self.status_category == DONE_CATEGORY
         return self.resolved is not None
+
+    @property
+    def closed_at(self) -> datetime:
+        """
+        Best estimate of when a done issue was closed. Many Jira workflows never
+        set ``resolutiondate``, so fall back to the status-category change time.
+        """
+        return self.resolved or self.status_category_changed or self.updated
 
     def is_critical(self, critical_priorities: set[str]) -> bool:
         return self.priority.lower() in critical_priorities

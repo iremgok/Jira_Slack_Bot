@@ -47,3 +47,19 @@ def test_compute_daily_report():
     assert [i.key for i in report.open_critical] == ["KAN-3", "KAN-1"]
     assert [(a.name, a.open_issues) for a in report.top_assignees] == [("Ali", 2), ("Veli", 1)]
     assert report.total_open == 3
+
+
+def test_closed_without_resolution_uses_status_change_date():
+    start = NOW.replace(hour=0)
+    end = start + timedelta(days=1)
+    last_week = start - timedelta(days=7)
+    issues = [
+        # moved to Done today, workflow never set a resolution
+        make_issue("KAN-1", created=last_week, category="done", status="Done",
+                   status_changed=NOW, updated=NOW),
+        # closed last week, only commented on today -> not "closed today"
+        make_issue("KAN-2", created=last_week, category="done", status="Done",
+                   status_changed=last_week, updated=NOW),
+    ]
+    report = compute_daily_report(issues, start, end, set())
+    assert [i.key for i in report.closed] == ["KAN-1"]

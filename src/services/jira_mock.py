@@ -34,6 +34,7 @@ def _raw(key: str, summary: str, status: str, category: str, priority: str,
             "created": _ts(created),
             "updated": _ts(updated),
             "resolutiondate": _ts(resolved) if resolved else None,
+            "statuscategorychangedate": _ts(resolved or updated) if category == "done" else None,
         },
     }
 

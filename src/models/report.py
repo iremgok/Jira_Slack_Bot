@@ -47,7 +47,7 @@ def compute_daily_report(
     Summarize a day of activity.
 
     * created        -> issues created inside the window
-    * closed         -> done issues resolved inside the window
+    * closed         -> done issues closed inside the window
     * open_critical  -> currently open issues with a critical priority
     * top_assignees  -> people holding the most open issues
     """
@@ -56,7 +56,7 @@ def compute_daily_report(
     created = [i for i in unique if _in_window(i.created, window_start, window_end)]
     closed = [
         i for i in unique
-        if i.is_done and _in_window(i.resolved or i.updated, window_start, window_end)
+        if i.is_done and _in_window(i.closed_at, window_start, window_end)
     ]
     open_issues = [i for i in unique if not i.is_done]
     open_critical = sorted(
@@ -70,7 +70,7 @@ def compute_daily_report(
     return DailyReport(
         report_date=window_start.date(),
         created=sorted(created, key=lambda i: i.created),
-        closed=sorted(closed, key=lambda i: i.resolved or i.updated),
+        closed=sorted(closed, key=lambda i: i.closed_at),
         open_critical=open_critical,
         top_assignees=top_assignees,
         total_open=len(open_issues),

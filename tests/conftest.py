@@ -16,7 +16,8 @@ NOW = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
 def raw_issue(key: str = "KAN-1", *, status: str = "To Do", category: str = "new",
               priority: str = "Medium", assignee: str | None = "Ayşe",
               created: datetime = NOW, updated: datetime | None = None,
-              resolved: datetime | None = None, summary: str = "Fix bug") -> dict[str, Any]:
+              resolved: datetime | None = None, status_changed: datetime | None = None,
+              summary: str = "Fix bug") -> dict[str, Any]:
     fmt = "%Y-%m-%dT%H:%M:%S.000%z"
     return {
         "key": key,
@@ -29,6 +30,7 @@ def raw_issue(key: str = "KAN-1", *, status: str = "To Do", category: str = "new
             "created": created.strftime(fmt),
             "updated": (updated or created).strftime(fmt),
             "resolutiondate": resolved.strftime(fmt) if resolved else None,
+            "statuscategorychangedate": status_changed.strftime(fmt) if status_changed else None,
         },
     }
 

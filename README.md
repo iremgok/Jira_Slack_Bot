@@ -23,8 +23,11 @@ src/
 ├── core/                # config (pydantic-settings), logger, exceptions
 ├── models/              # Pydantic domain modelleri (JiraIssue, DailyReport) + saf iş mantığı
 ├── services/            # Dış dünya: jira_client, jira_mock, slack_client (transport), slack_blocks (mesaj şablonları)
-├── database/            # db (engine/session), tables (ORM), repository (veri erişimi)
+├── database/            # db (engine/session), tables (ORM), repository (veri erişimi), migrations (Alembic)
 └── jobs/                # issue_poller, daily_report (orkestrasyon)
+alembic/                 # Migration ortamı (env.py) ve sürümler (versions/)
+alembic.ini
+docs/LIVE_TEST.md        # Gerçek Jira + Slack ile adım adım test rehberi
 ```
 
 Bağımlılık yönü: `jobs → services / database → models → core`. Joblar somut sınıflar yerine
@@ -71,6 +74,40 @@ SLACK_DRY_RUN=true
 
 Bu modda örnek issue'lar kullanılır ve Slack mesajları gönderilmek yerine loglara yazılır.
 
+Gerçek Jira Cloud ve Slack ile uçtan uca test için: **[docs/LIVE_TEST.md](docs/LIVE_TEST.md)**
+(Jira test projesi ve API token, Slack webhook / bot token kurulumu, senaryolar ve beklenen sonuçlar).
+
+## Veritabanı migrasyonları (Alembic)
+
+Şema `src/database/tables.py` içinde tanımlanır ve **Alembic** ile yönetilir. Alembic de aynı
+`DATABASE_URL` değerini okur (`.env` veya ortam değişkeni); Jira/Slack bilgileri gerekmez.
+
+- `DB_AUTO_MIGRATE=true` (varsayılan): uygulama her açılışta `upgrade head` çalıştırır.
+- Alembic'ten önce `create_all` ile oluşturulmuş mevcut veritabanları otomatik olarak
+  başlangıç sürümüne (baseline) *stamp*'lenir, veri kaybı olmaz. Bu eski veritabanlarında
+  `alembic check`, `sent_reports.report_date` için isimsiz unique kısıtı yüzünden kozmetik bir fark
+  raporlayabilir. Kısıt yine çalışır; sıfırdan oluşturulan veritabanlarında bu fark yoktur.
+
+```bash
+alembic upgrade head                                 # bekleyen migrasyonları uygula
+alembic current                                      # veritabanının mevcut sürümü
+alembic history                                      # migrasyon geçmişi
+alembic downgrade -1                                 # bir adım geri al
+alembic upgrade head --sql                           # SQL'i çalıştırmadan yazdır (DBA incelemesi için)
+```
+
+**Şema değişikliği akışı:**
+
+1. `src/database/tables.py` içinde tabloyu/kolonu değiştirin.
+2. `alembic revision --autogenerate -m "add xyz column"` komutunu çalıştırın.
+3. `alembic/versions/` altında oluşan dosyayı **gözden geçirin** (autogenerate her şeyi yakalayamaz;
+   ör. kolon yeniden adlandırma drop+add olarak çıkar).
+4. `alembic upgrade head` ile uygulayın ve `pytest` çalıştırın. `tests/test_migrations.py`,
+   migrasyonlar ile `tables.py` arasında fark kalırsa testi başarısız yapar.
+
+SQLite'ta `ALTER TABLE` kısıtlı olduğu için migrasyonlar *batch mode* ile üretilir. Kısıtlama adları
+sabit bir naming convention ile belirlenir. Böylece aynı migrasyon SQLite ve PostgreSQL'de aynı sonucu verir.
+
 ## Docker
 
 ```bash
@@ -79,6 +116,8 @@ docker compose logs -f jira_bot
 ```
 
 Compose, PostgreSQL'i de başlatır; `.env` içinde `POSTGRES_PASSWORD` tanımlı olmalıdır.
+Migrasyonlar konteyner açılırken otomatik uygulanır. Elle çalıştırmak için:
+`docker compose run --rm jira_bot alembic upgrade head`.
 
 ## Testler
 
@@ -86,8 +125,23 @@ Compose, PostgreSQL'i de başlatır; `.env` içinde `POSTGRES_PASSWORD` tanıml�
 pytest
 ```
 
+## Git notları
+
+IDE ve yerel dosyalar (`.idea/`, `.vscode/`, `.env`, `*.db`, `logs/`) `.gitignore` içindedir.
+Daha önce commit edilmiş bir klasörü takipten çıkarmak için (dosyalar diskte kalır):
+
+```bash
+git rm -r --cached .idea
+git commit -m "Stop tracking IDE settings"
+```
+
+Dikkat: Bu commit'i *pull* eden diğer geliştiricilerin çalışma kopyasında git, takip edilen `.idea/`
+dosyalarını siler. IDE klasörü yeniden oluşturur, ancak kişisel ayarlar kaybolabilir. Gerekirse pull öncesinde yedekleyin.
+
 ## Notlar
 
 - Jira Cloud'un güncel arama uç noktası `/rest/api/3/search/jql` (token tabanlı sayfalama) kullanılır.
 - JQL'de mutlak tarih yerine göreli süreler (`updated >= -15m`) kullanılır; böylece Jira kullanıcı
   profilinin saat dilimi sonucu etkilemez. Günlük raporun gün sınırı botun `TIMEZONE` ayarına göre hesaplanır.
+- Birçok Jira iş akışı Done'a geçişte `resolution` alanını doldurmaz. "Bugün kapatılan" hesabı bu yüzden
+  `resolutiondate` yoksa `statuscategorychangedate` alanını kullanır.

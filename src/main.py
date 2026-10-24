@@ -23,6 +23,7 @@ from pydantic import ValidationError
 from src.core.config import Settings, get_settings
 from src.core.logger import setup_logging
 from src.database.db import Database
+from src.database.migrations import upgrade_database
 from src.jobs.daily_report import DailyReportJob
 from src.jobs.issue_poller import IssuePoller
 from src.services.jira_client import IssueSource, JiraClient
@@ -49,8 +50,9 @@ class App:
 
 def build_app(settings: Settings) -> App:
     """Wire all dependencies together. The only place that knows concrete classes."""
+    if settings.db_auto_migrate:
+        upgrade_database(settings.database_url)
     database = Database(settings.database_url)
-    database.create_tables()
 
     jira: IssueSource
     if settings.jira_mock_mode:

@@ -14,14 +14,27 @@ from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-        str_strip_whitespace=True,
-    )
+_ENV_CONFIG = SettingsConfigDict(
+    env_file=".env",
+    env_file_encoding="utf-8",
+    case_sensitive=False,
+    extra="ignore",
+    str_strip_whitespace=True,
+)
+
+
+class DatabaseSettings(BaseSettings):
+    """Only what database tooling (e.g. Alembic) needs - no API secrets required."""
+
+    model_config = _ENV_CONFIG
+
+    database_url: str = "sqlite:///jira_bot.db"
+    # Run "alembic upgrade head" automatically on application startup
+    db_auto_migrate: bool = True
+
+
+class Settings(DatabaseSettings):
+    model_config = _ENV_CONFIG
 
     # ---------- App ----------
     app_name: str = "Jira Slack Bot"
@@ -44,9 +57,6 @@ class Settings(BaseSettings):
     slack_channel: str = ""
     # Log messages instead of sending them (local development)
     slack_dry_run: bool = False
-
-    # ---------- Database ----------
-    database_url: str = "sqlite:///jira_bot.db"
 
     # ---------- Scheduler ----------
     poll_interval_seconds: int = Field(default=300, ge=30)

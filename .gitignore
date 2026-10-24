@@ -16,6 +16,8 @@ logs/
 
 # IDE
 .idea/
+.vscode/
+*.iml
 
 # Database
 *.db

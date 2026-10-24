@@ -11,6 +11,7 @@ apscheduler>=3.10,<4
 
 # Database
 SQLAlchemy>=2.0,<3
+alembic>=1.16,<2
 psycopg2-binary>=2.9
 
 # Timezone database (needed on Windows / slim images)
