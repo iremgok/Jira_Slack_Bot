@@ -1,26 +1,20 @@
-# HTTP Client
-httpx
-tenacity
+# HTTP
+requests>=2.32,<3
 
-# Configuration
-python-dotenv
-pydantic
-pydantic-settings
-
-# Backend API
-fastapi
-uvicorn
-
-# Database
-SQLAlchemy
-psycopg2-binary
-
-# Slack
-slack_sdk
+# Configuration & models
+python-dotenv>=1.0
+pydantic>=2.7,<3
+pydantic-settings>=2.3,<3
 
 # Scheduler
-apscheduler
+apscheduler>=3.10,<4
+
+# Database
+SQLAlchemy>=2.0,<3
+psycopg2-binary>=2.9
+
+# Timezone database (needed on Windows / slim images)
+tzdata
 
 # Testing
-pytest
-pytest-mock
+pytest>=8

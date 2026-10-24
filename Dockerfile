@@ -1,25 +1,18 @@
 FROM python:3.13-slim
 
-# Prevent Python from writing pyc files and enable unbuffered stdout/stderr logging
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# Install curl for healthcheck validation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
-# Copy application source code
-COPY . .
+COPY src ./src
 
-# Expose API port
-EXPOSE 8000
+# Run as an unprivileged user
+RUN useradd --create-home --uid 1000 bot && mkdir -p /app/logs && chown -R bot /app
+USER bot
 
-# Run uvicorn web server and scheduler entrypoint
-CMD ["python", "main.py"]
+CMD ["python", "-m", "src.main"]
