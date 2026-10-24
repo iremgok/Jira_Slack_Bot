@@ -55,3 +55,14 @@ def test_daily_report_sent_once_per_day(database):
     assert job.run(now=NOW, force=True) is not None   # manual resend allowed
     assert len(slack.messages) == 2
     assert "statusCategory != Done" in jira.queries[0]
+
+
+def test_poller_stops_on_slack_outage(database):
+    jira = FakeJira([make_issue(f"KAN-{n}") for n in range(1, 6)])
+    slack = FakeSlack(fail_keys={"KAN-"})  # every message fails
+    result = make_poller(database, jira, slack).run()
+
+    assert result.failed == 5
+    assert slack.attempts == 1  # did not hammer Slack for every issue
+    with database.session_scope() as session:
+        assert IssueRepository(session).count() == 0  # nothing saved -> retried next poll

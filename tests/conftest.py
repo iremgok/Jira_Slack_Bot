@@ -56,8 +56,10 @@ class FakeSlack:
     def __init__(self, fail_keys: set[str] | None = None) -> None:
         self.messages = []
         self.fail_keys = fail_keys or set()
+        self.attempts = 0
 
     def send(self, message) -> None:
+        self.attempts += 1
         if any(key in message.text for key in self.fail_keys):
             raise SlackError("boom")
         self.messages.append(message)

@@ -118,7 +118,29 @@ Test durumunu sıfırlamak için botu durdurup `live_test.db` dosyasını silmen
 
 ---
 
+### 3.1 Docker ile canlı test (isteğe bağlı)
+
+Aynı `.env` dosyasına `POSTGRES_PASSWORD=<url-güvenli-bir-şifre>` ekleyip senaryoları konteyner içinde
+PostgreSQL ile de çalıştırabilirsiniz. `DATABASE_URL` değeri compose tarafından otomatik ayarlanır:
+
+```bash
+docker compose up -d postgres
+docker compose run --rm jira_bot python -m src.main --check
+docker compose run --rm jira_bot python -m src.main --once poll
+docker compose run --rm jira_bot python -m src.main --once report
+docker compose up -d jira_bot && docker compose logs -f jira_bot     # zamanlayıcı
+docker compose down -v                                              # her şeyi (veri dahil) sil
+```
+
+---
+
 ## 4. Test senaryoları
+
+Her çalıştırmanın ilk log satırı, sırlar hariç etkin yapılandırmayı gösterir. Testten önce bunu kontrol edin:
+
+```text
+Config: jira=https://sirketim-test.atlassian.net project=BOT extra_jql='' | slack=incoming webhook | db=sqlite:///live_test.db (auto-migrate=True) | tz=Europe/Istanbul
+```
 
 Tüm komutlar proje kök dizininde, sanal ortam aktifken çalıştırılır.
 
@@ -148,16 +170,23 @@ Tüm komutlar proje kök dizininde, sanal ortam aktifken çalıştırılır.
 
 | Değişiklik | Beklenen log |
 |------------|--------------|
-| `JIRA_API_TOKEN` yanlış | `Jira rejected the credentials (HTTP 401)...` |
+| `JIRA_API_TOKEN` yanlış | `JiraAuthError: Jira rejected the credentials (HTTP 401)...`, çıkış kodu `1` |
+| `JIRA_BASE_URL` yanlış site / Jira Server | `Jira endpoint not found (/rest/api/3/search/jql). JIRA_BASE_URL must point to a Jira Cloud site...` |
 | `JIRA_PROJECT_KEY=YOKBOYLE` | `Invalid Jira request: The value 'YOKBOYLE' does not exist for the field 'project'.` (HTTP 400) |
 | `JIRA_EXTRA_JQL=foo = bar` | `Invalid Jira request: Field 'foo' does not exist...` |
-| Bot token var, bot kanalda değil | `Slack API error: not_in_channel` |
-| Yanlış kanal ID'si | `Slack API error: channel_not_found` |
-| Webhook URL'si iptal edilmiş | `Slack webhook returned HTTP 404: no_service` (veya `403 invalid_token`) |
+| Bot token var, bot kanalda değil | `Slack API error: not_in_channel -> invite the bot: /invite @<app-name> ...` |
+| Yanlış kanal ID'si (ör. `#jira-bot-test` yazılmış) | `Slack API error: channel_not_found -> SLACK_CHANNEL must be a channel ID like C0123ABCDEF` |
+| Webhook URL'si iptal edilmiş | `Slack webhook returned HTTP 404: no_service -> the webhook was removed or the URL is wrong` |
+| İnternet / Slack erişilemiyor | `Slack delivery failed for BOT-1: Could not reach Slack webhook (ConnectionError). Deferring N issue(s) to the next poll.`, çıkış kodu `1`. Webhook URL'si loga **yazılmaz** |
+| PostgreSQL kapalı (Docker) | `Waiting for database ... (attempt n)` uyarıları, süre dolunca `RepositoryError: Database ... not reachable after 60s` (şifre `***` ile maskelenir) |
 | `JIRA_EMAIL` boş | Açılışta `Invalid configuration: ... Missing required configuration: JIRA_EMAIL`, çıkış kodu `2` |
 
-Slack bildirimi başarısız olan issue'lar veritabanına kaydedilmez ve poll imleci ilerletilmez.
-Hata giderildiğinde bir sonraki poll, kaçırılan bildirimleri gönderir.
+Slack bildirimi başarısız olursa o turdaki kalan issue'lar için tekrar denenmez. Bu issue'lar veritabanına
+kaydedilmez ve poll imleci ilerletilmez; hata giderildiğinde bir sonraki poll kaçırılan bildirimleri gönderir.
+Zamanlanmış günlük rapor başarısız olursa 10 dakika arayla en fazla 3 kez yeniden denenir.
+
+Beklenen hatalar (Jira/Slack/DB) traceback olmadan tek satırla loglanır. Ayrıntı için
+`LOG_LEVEL=DEBUG` kullanın; beklenmeyen hatalar her zaman tam traceback ile loglanır.
 
 ---
 

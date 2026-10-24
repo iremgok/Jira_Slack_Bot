@@ -12,8 +12,10 @@ from typing import Any
 from src.models.issue import FieldChange, JiraIssue
 from src.models.report import DailyReport
 
-MAX_LIST_ITEMS = 10  # keep report sections well under Slack's 3000-char limit
-HEADER_LIMIT = 150
+MAX_LIST_ITEMS = 10
+LIST_SUMMARY_LIMIT = 80   # 10 items x ~200 chars stays under the section limit
+HEADER_LIMIT = 150        # Slack: header text max 150 chars
+SECTION_LIMIT = 3000      # Slack: section text max 3000 chars (else "invalid_blocks")
 
 PRIORITY_EMOJI = {
     "highest": "🔴", "critical": "🔴", "blocker": "🔴",
@@ -35,9 +37,13 @@ def escape(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def issue_link(issue: JiraIssue, with_summary: bool = True) -> str:
-    label = f"{issue.key} — {issue.summary}" if with_summary else issue.key
-    return f"<{issue.url}|{escape(label)}>"
+def truncate(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def issue_link(issue: JiraIssue, summary_limit: int | None = None) -> str:
+    summary = truncate(issue.summary, summary_limit) if summary_limit else issue.summary
+    return f"<{issue.url}|{escape(f'{issue.key} — {summary}')}>"
 
 
 def priority_badge(priority: str) -> str:
@@ -49,7 +55,8 @@ def _header(text: str) -> dict[str, Any]:
 
 
 def _section(markdown: str) -> dict[str, Any]:
-    return {"type": "section", "text": {"type": "mrkdwn", "text": markdown}}
+    # Hard cap as a last resort; callers already keep content short
+    return {"type": "section", "text": {"type": "mrkdwn", "text": truncate(markdown, SECTION_LIMIT)}}
 
 
 def _fields(*pairs: tuple[str, str]) -> dict[str, Any]:
@@ -80,7 +87,7 @@ def _issue_list(issues: list[JiraIssue], empty_text: str) -> str:
     if not issues:
         return f"_{empty_text}_"
     lines = [
-        f"• {issue_link(i)}  ·  {priority_badge(i.priority)}  ·  {escape(i.assignee_display)}"
+        f"• {issue_link(i, LIST_SUMMARY_LIMIT)}  ·  {priority_badge(i.priority)}  ·  {escape(i.assignee_display)}"
         for i in issues[:MAX_LIST_ITEMS]
     ]
     if len(issues) > MAX_LIST_ITEMS:

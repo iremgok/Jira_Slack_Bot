@@ -15,7 +15,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from src.core.exceptions import BotError
+from src.core.exceptions import RepositoryError, SlackError
 from src.database.db import Database
 from src.database.repository import IssueRepository, JobStateRepository
 from src.models.issue import JiraIssue, detect_changes
@@ -74,8 +74,19 @@ class IssuePoller:
         with self.database.session_scope() as session:
             snapshots = IssueRepository(session).get_snapshots([i.key for i in issues])
 
-        for issue in issues:
-            self._handle_issue(issue, snapshots.get(issue.key), result)
+        for index, issue in enumerate(issues):
+            try:
+                self._handle_issue(issue, snapshots.get(issue.key), result)
+            except SlackError as exc:
+                # Slack is down or misconfigured: retrying every remaining issue would only
+                # multiply timeouts. The cursor stays put, so the next poll picks them up.
+                remaining = len(issues) - index
+                result.failed += remaining
+                logger.error(
+                    "Slack delivery failed for %s: %s. Deferring %d issue(s) to the next poll.",
+                    issue.key, exc, remaining,
+                )
+                break
 
         if result.failed == 0:
             with self.database.session_scope() as session:
@@ -106,14 +117,14 @@ class IssuePoller:
         else:
             return  # already processed this version
 
+        if message is not None:
+            self.slack.send(message)  # SlackError propagates to run()
         try:
-            if message is not None:
-                self.slack.send(message)
             with self.database.session_scope() as session:
                 IssueRepository(session).upsert(issue)
-        except BotError as exc:
+        except RepositoryError as exc:
             result.failed += 1
-            logger.error("Could not process %s: %s", issue.key, exc)
+            logger.error("Notified about %s but could not save its snapshot: %s", issue.key, exc)
 
     def _lookback_minutes(self, last_success: datetime | None, now: datetime) -> int:
         if last_success is None:

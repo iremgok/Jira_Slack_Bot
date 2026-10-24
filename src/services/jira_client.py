@@ -57,6 +57,7 @@ class JiraClient:
             status_forcelist=(429, 500, 502, 503, 504),
             allowed_methods=frozenset({"GET"}),
             respect_retry_after_header=True,
+            raise_on_status=False,  # hand back the last response so we can report its status
         )
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
         self.session.mount("http://", HTTPAdapter(max_retries=retry))
@@ -78,8 +79,11 @@ class JiraClient:
             data = self._get(SEARCH_ENDPOINT, params=params)
             issues.extend(self._parse_issues(data.get("issues", [])))
 
-            next_token = data.get("nextPageToken")
+            previous_token, next_token = next_token, data.get("nextPageToken")
             if data.get("isLast", True) or not next_token:
+                break
+            if next_token == previous_token:
+                logger.warning("Jira returned the same page token twice; stopping pagination.")
                 break
             if limit is not None and len(issues) >= limit:
                 break
@@ -119,6 +123,13 @@ class JiraClient:
             )
         if response.status_code == 400:
             raise JiraError(f"Invalid Jira request: {self._error_detail(response)}")
+        if response.status_code == 404:
+            raise JiraError(
+                f"Jira endpoint not found ({path}). JIRA_BASE_URL must point to a Jira Cloud "
+                f"site such as https://<site>.atlassian.net (current: {self.base_url})."
+            )
+        if response.status_code == 429:
+            raise JiraError("Jira rate limit exceeded (HTTP 429) even after retries; try again later.")
         if not response.ok:
             raise JiraError(
                 f"Jira returned HTTP {response.status_code} for {path}: "

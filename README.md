@@ -1,5 +1,7 @@
 # Jira Issue Takip & Slack Rapor Botu
 
+[![Run Tests](https://github.com/iremgok/Jira_Slack_Bot/actions/workflows/pytest.yml/badge.svg)](https://github.com/iremgok/Jira_Slack_Bot/actions/workflows/pytest.yml)
+
 Jira'daki yeni/güncellenen issue'ları periyodik olarak takip edip Slack'e bildiren ve
 her gün (varsayılan 18:00) özet rapor gönderen bot.
 
@@ -115,15 +117,49 @@ docker compose up -d --build
 docker compose logs -f jira_bot
 ```
 
-Compose, PostgreSQL'i de başlatır; `.env` içinde `POSTGRES_PASSWORD` tanımlı olmalıdır.
-Migrasyonlar konteyner açılırken otomatik uygulanır. Elle çalıştırmak için:
-`docker compose run --rm jira_bot alembic upgrade head`.
+Compose, PostgreSQL'i de başlatır. Açılış sırası:
 
-## Testler
+1. `postgres` sağlıklı (`pg_isready`) olana kadar bot başlatılmaz.
+2. Bot, veritabanı bağlantı kabul edene kadar en fazla `DB_CONNECT_TIMEOUT_SECONDS` (60 sn) bekler.
+3. `DB_AUTO_MIGRATE=true` ise `alembic upgrade head` çalışır, ardından zamanlayıcı başlar.
+4. Bir adım başarısız olursa süreç `1` koduyla çıkar ve `restart: unless-stopped` yeniden dener.
+
+Önemli noktalar:
+
+- `.env` içinde **`POSTGRES_PASSWORD` zorunludur**; tanımlı değilse `docker compose` hiç başlamaz.
+  Şifre `DATABASE_URL` içine yerleştirildiği için yalnızca URL-güvenli karakterler kullanın
+  (harf, rakam, `-` `_` `.` `~`) ya da şifreyi percent-encode edin.
+- Compose, `.env`'deki `DATABASE_URL` değerini PostgreSQL adresiyle ezer. Böylece aynı `.env`
+  hem yerelde (SQLite) hem Docker'da çalışır.
+- Konteynerde loglar yalnızca stdout'a yazılır (`LOG_DIR=""`) ve Docker tarafından döndürülür
+  (10 MB × 5 dosya). Okumak için `docker compose logs -f jira_bot`.
+- `SIGTERM` (`docker compose stop`) yakalanır ve zamanlayıcı düzgün kapatılır.
+
+Faydalı komutlar:
+
+```bash
+docker compose run --rm jira_bot python -m src.main --check        # bağlantı testi
+docker compose run --rm jira_bot python -m src.main --once poll
+docker compose run --rm jira_bot python -m src.main --once report
+docker compose run --rm jira_bot alembic current                   # migrasyon durumu
+docker compose exec postgres psql -U jira_bot -d jira_slack_bot    # veritabanı konsolu
+```
+
+## Testler ve CI
 
 ```bash
 pytest
 ```
+
+`.github/workflows/pytest.yml` her `push` ve `pull_request` işleminde, tüm dallarda çalışır:
+
+| Job | Ne yapar |
+|-----|----------|
+| `test` | Python **3.10** (minimum) ve **3.13** (Docker imajı) ile `pytest` |
+| `postgres-migrations` | Gerçek PostgreSQL 17 servisinde `alembic upgrade head` → `check` → `downgrade base` → `upgrade head`, ardından mock + dry-run modunda `--once poll` ve `--once report` |
+| `docker-build` | `Dockerfile`'ın derlendiğini doğrular |
+
+CI hiçbir gizli bilgi (secret) gerektirmez; Jira ve Slack çağrıları mock/dry-run ile simüle edilir.
 
 ## Git notları
 
@@ -137,6 +173,14 @@ git commit -m "Stop tracking IDE settings"
 
 Dikkat: Bu commit'i *pull* eden diğer geliştiricilerin çalışma kopyasında git, takip edilen `.idea/`
 dosyalarını siler. IDE klasörü yeniden oluşturur, ancak kişisel ayarlar kaybolabilir. Gerekirse pull öncesinde yedekleyin.
+
+## Çıkış kodları
+
+| Kod | Anlamı |
+|-----|--------|
+| `0` | Başarılı |
+| `1` | Çalışma hatası (Jira/Slack/DB hatası ya da `--once poll` sırasında gönderilemeyen bildirim) |
+| `2` | Geçersiz veya eksik yapılandırma |
 
 ## Notlar
 

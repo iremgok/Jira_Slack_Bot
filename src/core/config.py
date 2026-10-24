@@ -31,6 +31,8 @@ class DatabaseSettings(BaseSettings):
     database_url: str = "sqlite:///jira_bot.db"
     # Run "alembic upgrade head" automatically on application startup
     db_auto_migrate: bool = True
+    # How long to wait for the database to accept connections on startup
+    db_connect_timeout_seconds: int = Field(default=60, ge=0)
 
 
 class Settings(DatabaseSettings):

@@ -4,12 +4,16 @@ Database connection management (SQLite or PostgreSQL via SQLAlchemy 2.x).
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import MetaData, create_engine, event
-from sqlalchemy.engine import Engine
+from sqlalchemy import MetaData, create_engine, event, text
+from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
+from src.core.exceptions import RepositoryError
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +64,9 @@ class Database:
         try:
             yield session
             session.commit()
+        except SQLAlchemyError as exc:
+            session.rollback()
+            raise RepositoryError(f"Database transaction failed: {exc}") from exc
         except Exception:
             session.rollback()
             raise
@@ -74,3 +81,37 @@ def _enable_sqlite_wal(dbapi_connection, _record) -> None:
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.close()
+
+
+def safe_url(url: str) -> str:
+    """Database URL with the password masked, safe for logs."""
+    return make_url(url).render_as_string(hide_password=True)
+
+
+def wait_for_database(url: str, timeout_seconds: int = 60, interval_seconds: float = 2.0) -> None:
+    """
+    Block until the database accepts connections (e.g. PostgreSQL still starting
+    in Docker). Raises ``RepositoryError`` once ``timeout_seconds`` is exceeded.
+    """
+    engine = create_engine(url, pool_pre_ping=True)
+    deadline = time.monotonic() + timeout_seconds
+    attempt = 0
+    try:
+        while True:
+            attempt += 1
+            try:
+                with engine.connect() as connection:
+                    connection.execute(text("SELECT 1"))
+                if attempt > 1:
+                    logger.info("Database is reachable after %d attempt(s).", attempt)
+                return
+            except OperationalError as exc:
+                if time.monotonic() >= deadline:
+                    raise RepositoryError(
+                        f"Database {safe_url(url)} not reachable after {timeout_seconds}s: "
+                        f"{getattr(exc, 'orig', exc)}"
+                    ) from None
+                logger.warning("Waiting for database %s (attempt %d)...", safe_url(url), attempt)
+                time.sleep(interval_seconds)
+    finally:
+        engine.dispose()

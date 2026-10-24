@@ -23,6 +23,22 @@ logger = logging.getLogger(__name__)
 POST_MESSAGE_URL = "https://slack.com/api/chat.postMessage"
 AUTH_TEST_URL = "https://slack.com/api/auth.test"
 
+# Actionable hints for the most common setup mistakes
+_API_HINTS = {
+    "not_in_channel": " -> invite the bot: /invite @<app-name> (or add the chat:write.public scope)",
+    "channel_not_found": " -> SLACK_CHANNEL must be a channel ID like C0123ABCDEF",
+    "invalid_auth": " -> SLACK_BOT_TOKEN is wrong or revoked",
+    "not_authed": " -> SLACK_BOT_TOKEN is missing",
+    "missing_scope": " -> add the chat:write scope and reinstall the app",
+    "token_revoked": " -> generate a new bot token",
+}
+_WEBHOOK_HINTS = {
+    "no_service": " -> the webhook was removed or the URL is wrong",
+    "invalid_token": " -> the webhook URL is invalid",
+    "channel_is_archived": " -> the target channel is archived",
+    "invalid_payload": " -> message payload rejected (please report this as a bug)",
+}
+
 
 class SlackClient:
     def __init__(
@@ -46,6 +62,7 @@ class SlackClient:
             status_forcelist=(429, 500, 502, 503, 504),
             allowed_methods=frozenset({"POST"}),
             respect_retry_after_header=True,
+            raise_on_status=False,  # hand back the last response so we can report its status
         )
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
 
@@ -80,9 +97,13 @@ class SlackClient:
         try:
             response = self.session.post(self.webhook_url, json=payload, timeout=self.timeout)
         except requests.RequestException as exc:
-            raise SlackError(f"Could not reach Slack webhook: {exc}") from exc
+            # str(exc) contains the full webhook URL, which is a secret -> report the type only
+            raise SlackError(f"Could not reach Slack webhook ({type(exc).__name__}).") from None
         if not response.ok:
-            raise SlackError(f"Slack webhook returned HTTP {response.status_code}: {response.text[:200]}")
+            raise SlackError(
+                f"Slack webhook returned HTTP {response.status_code}: {response.text[:200]}"
+                f"{_WEBHOOK_HINTS.get(response.text.strip(), '')}"
+            )
         logger.info("Slack message sent via webhook.")
 
     def _send_bot(self, payload: dict[str, Any]) -> None:
@@ -104,5 +125,12 @@ class SlackClient:
 
         # Slack Web API returns HTTP 200 with ok=false on logical errors
         if not data.get("ok"):
-            raise SlackError(f"Slack API error: {data.get('error', 'unknown_error')}")
+            error = data.get("error", "unknown_error")
+            details = "; ".join((data.get("response_metadata") or {}).get("messages", []))
+            raise SlackError(
+                f"Slack API error: {error}"
+                f"{f' ({details})' if details else ''}{_API_HINTS.get(error, '')}"
+            )
+        for warning in (data.get("response_metadata") or {}).get("warnings", []):
+            logger.warning("Slack API warning: %s", warning)
         return data

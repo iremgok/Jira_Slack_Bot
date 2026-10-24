@@ -14,15 +14,16 @@ import signal
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from pydantic import ValidationError
 
 from src.core.config import Settings, get_settings
+from src.core.exceptions import BotError
 from src.core.logger import setup_logging
-from src.database.db import Database
+from src.database.db import Database, safe_url, wait_for_database
 from src.database.migrations import upgrade_database
 from src.jobs.daily_report import DailyReportJob
 from src.jobs.issue_poller import IssuePoller
@@ -31,6 +32,9 @@ from src.services.jira_mock import MockJiraClient
 from src.services.slack_client import SlackClient
 
 logger = logging.getLogger("src.main")
+
+REPORT_RETRY_ATTEMPTS = 3
+REPORT_RETRY_DELAY = timedelta(minutes=10)
 
 
 @dataclass
@@ -50,6 +54,8 @@ class App:
 
 def build_app(settings: Settings) -> App:
     """Wire all dependencies together. The only place that knows concrete classes."""
+    log_startup_summary(settings)
+    wait_for_database(settings.database_url, settings.db_connect_timeout_seconds)
     if settings.db_auto_migrate:
         upgrade_database(settings.database_url)
     database = Database(settings.database_url)
@@ -94,13 +100,32 @@ def build_app(settings: Settings) -> App:
     return App(settings, database, jira, slack, poller, daily_report)
 
 
+def log_startup_summary(settings: Settings) -> None:
+    """Log the effective (non-secret) configuration - invaluable during live tests."""
+    if settings.slack_dry_run:
+        slack_mode = "dry-run (messages are only logged)"
+    elif settings.slack_webhook_url.get_secret_value():
+        slack_mode = "incoming webhook"
+    else:
+        slack_mode = f"bot token -> channel {settings.slack_channel}"
+    jira_target = "MOCK sample data" if settings.jira_mock_mode else settings.jira_base_url
+
+    logger.info(
+        "Config: jira=%s project=%s extra_jql=%r | slack=%s | db=%s (auto-migrate=%s) | tz=%s",
+        jira_target, settings.jira_project_key, settings.jira_extra_jql or "", slack_mode,
+        safe_url(settings.database_url), settings.db_auto_migrate, settings.timezone,
+    )
+
+
 def _safe(job_name: str, func: Callable[[], object]) -> Callable[[], None]:
     """Wrap a job so one failure never kills the scheduler."""
     def runner() -> None:
         try:
             func()
+        except BotError as exc:  # expected integration failure: clear message, no traceback
+            logger.error("Job '%s' failed: %s", job_name, exc)
         except Exception:  # noqa: BLE001 - last line of defence for scheduled jobs
-            logger.exception("Job '%s' failed.", job_name)
+            logger.exception("Job '%s' crashed unexpectedly.", job_name)
     return runner
 
 
@@ -117,8 +142,22 @@ def run_scheduler(app: App) -> None:
         max_instances=1,
         coalesce=True,
     )
+    def daily_report_with_retry(attempt: int = 1) -> None:
+        try:
+            app.daily_report.run()
+        except BotError as exc:
+            if attempt >= REPORT_RETRY_ATTEMPTS:
+                logger.error("Daily report failed after %d attempt(s): %s", attempt, exc)
+                return
+            retry_at = datetime.now(scheduler.timezone) + REPORT_RETRY_DELAY
+            logger.error("Daily report failed (attempt %d): %s. Retrying at %s.",
+                         attempt, exc, retry_at.strftime("%H:%M"))
+            scheduler.add_job(_safe("daily_report_retry", lambda: daily_report_with_retry(attempt + 1)),
+                              trigger="date", run_date=retry_at, id="daily_report_retry",
+                              replace_existing=True)
+
     scheduler.add_job(
-        _safe("daily_report", app.daily_report.run),
+        _safe("daily_report", daily_report_with_retry),
         trigger=CronTrigger.from_crontab(settings.daily_report_cron, timezone=settings.timezone),
         id="daily_report",
         max_instances=1,
@@ -171,12 +210,17 @@ def main(argv: list[str] | None = None) -> int:
             logger.info("Jira: %s | Slack: %s", "OK" if jira_ok else "FAIL", "OK" if slack_ok else "FAIL")
             return 0 if jira_ok and slack_ok else 1
         if args.once == "poll":
-            app.poller.run()
-        elif args.once == "report":
+            result = app.poller.run()
+            return 1 if result.failed else 0
+        if args.once == "report":
             app.daily_report.run(force=True)
-        else:
-            run_scheduler(app)
+            return 0
+        run_scheduler(app)
         return 0
+    except BotError as exc:
+        logger.error("%s: %s", type(exc).__name__, exc)
+        logger.debug("Traceback:", exc_info=True)
+        return 1
     except Exception:  # noqa: BLE001
         logger.exception("Fatal error.")
         return 1

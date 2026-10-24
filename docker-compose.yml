@@ -12,7 +12,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   jira_bot:
     build: .
@@ -23,9 +23,18 @@ services:
     env_file:
       - .env
     environment:
+      # Overrides any DATABASE_URL in .env. The password must be URL-safe
+      # (letters, digits, - _ . ~) or percent-encoded.
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-jira_bot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-jira_slack_bot}
-    volumes:
-      - ./logs:/app/logs
+      DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
+      # Log to stdout only; read with "docker compose logs"
+      LOG_DIR: ""
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 volumes:
   postgres_data:

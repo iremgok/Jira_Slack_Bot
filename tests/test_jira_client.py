@@ -66,3 +66,22 @@ def test_bad_jql_reports_jira_message():
     client = make_client([FakeResponse(400, {"errorMessages": ["Field 'foo' does not exist"]})])
     with pytest.raises(JiraError, match="foo"):
         client.search_issues("foo = bar")
+
+
+def test_not_found_explains_base_url():
+    client = make_client([FakeResponse(404, {})])
+    with pytest.raises(JiraError, match="JIRA_BASE_URL"):
+        client.search_issues("x")
+
+
+def test_rate_limit_after_retries():
+    client = make_client([FakeResponse(429, {})])
+    with pytest.raises(JiraError, match="429"):
+        client.search_issues("x")
+
+
+def test_repeated_page_token_stops_pagination():
+    page = {"issues": [raw_issue("KAN-1")], "nextPageToken": "same", "isLast": False}
+    client = make_client([FakeResponse(200, page), FakeResponse(200, page)])
+    assert len(client.search_issues("x")) == 2
+    assert len(client.session.calls) == 2
